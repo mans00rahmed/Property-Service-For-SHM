@@ -5,13 +5,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "properties", indexes = {
-        @Index(name = "idx_properties_manager_id", columnList = "manager_id")
-})
+@Table(
+        name = "properties",
+        indexes = {
+                @Index(name = "idx_manager_id", columnList = "manager_id")
+        }
+)
 public class Property {
 
     @Id
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, columnDefinition = "VARCHAR(36)")
     private UUID id;
 
     @Column(nullable = false, length = 500)
@@ -20,7 +23,7 @@ public class Property {
     @Column(name = "property_type", nullable = false, length = 100)
     private String propertyType;
 
-    @Column(name = "manager_id", nullable = false)
+    @Column(name = "manager_id", nullable = false, columnDefinition = "VARCHAR(36)")
     private UUID managerId;
 
     @Column(name = "created_at", nullable = false)
