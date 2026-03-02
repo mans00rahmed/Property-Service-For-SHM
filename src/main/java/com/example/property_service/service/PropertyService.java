@@ -2,6 +2,8 @@ package com.example.property_service.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -52,5 +54,17 @@ public class PropertyService {
         }
 
         propertyRepository.deleteById(propertyId);
+    }
+    
+    public List<PropertyResponse> getPropertiesForManager(UUID managerId) {
+        return propertyRepository.findByManagerId(managerId)
+                .stream()
+                .map(p -> new PropertyResponse(
+                        p.getId(),          // ✅ UUID
+                        p.getAddress(),
+                        p.getPropertyType(),
+                        p.getManagerId()    // ✅ UUID (you're using managerId as ownerId for now)
+                ))
+                .toList();
     }
 }
