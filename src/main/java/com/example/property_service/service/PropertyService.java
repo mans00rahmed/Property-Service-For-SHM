@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import com.example.property_service.dto.CreatePropertyRequest;
 import com.example.property_service.dto.PropertyResponse;
 import com.example.property_service.entity.Property;
+import com.example.property_service.exception.PropertyNotFoundException;
 import com.example.property_service.repository.PropertyRepository;
 import com.sigma.smarthome.propertyservice.dto.PropertyUpdateRequest;
 
@@ -40,7 +41,7 @@ public class PropertyService {
     public PropertyResponse updateProperty(UUID id, PropertyUpdateRequest request) {
 
         Property property = propertyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Property not found"));
+                .orElseThrow(() -> new PropertyNotFoundException(id));
 
         property.setAddress(request.getAddress());
         property.setPropertyType(request.getPropertyType());
