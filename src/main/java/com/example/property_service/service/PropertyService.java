@@ -1,10 +1,14 @@
 package com.example.property_service.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
 
 import com.example.property_service.dto.CreatePropertyRequest;
 import com.example.property_service.dto.PropertyResponse;
 import com.example.property_service.entity.Property;
+import com.example.property_service.exception.PropertyNotFoundException;
 import com.example.property_service.repository.PropertyRepository;
 
 import java.time.LocalDateTime;
@@ -34,5 +38,19 @@ public class PropertyService {
                 saved.getPropertyType(),
                 saved.getManagerId()
         );
+    }
+    
+
+
+    @Transactional
+    public void deleteProperty(String id) {
+
+        UUID propertyId = UUID.fromString(id);
+
+        if (!propertyRepository.existsById(propertyId)) {
+            throw new PropertyNotFoundException("Property not found");
+        }
+
+        propertyRepository.deleteById(propertyId);
     }
 }

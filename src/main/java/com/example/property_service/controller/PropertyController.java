@@ -10,6 +10,7 @@ import java.net.URI;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+
 @RestController
 @RequestMapping("/properties")
 public class PropertyController {
@@ -18,6 +19,17 @@ public class PropertyController {
 
     public PropertyController(PropertyService propertyService) {
         this.propertyService = propertyService;
+    }
+    
+    
+
+    @PreAuthorize("hasRole('PROPERTY_MANAGER')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProperty(@PathVariable String id) {
+
+        propertyService.deleteProperty(id);
+
+        return ResponseEntity.noContent().build();
     }
 
     // keep your old test endpoint
