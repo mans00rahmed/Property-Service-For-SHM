@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(errorMessage);
     }
-    
+
     @ExceptionHandler(PropertyNotFoundException.class)
     public ResponseEntity<String> handlePropertyNotFound(PropertyNotFoundException ex) {
         return ResponseEntity.status(404).body(ex.getMessage());
