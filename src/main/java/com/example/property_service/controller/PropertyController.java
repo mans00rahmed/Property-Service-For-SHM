@@ -3,6 +3,7 @@ package com.example.property_service.controller;
 import com.example.property_service.dto.CreatePropertyRequest;
 import com.example.property_service.dto.PropertyResponse;
 import com.example.property_service.service.PropertyService;
+import com.sigma.smarthome.propertyservice.dto.PropertyUpdateRequest;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class PropertyController {
     }
 
     /**
-     * SMPM-16 Create property (POST /properties)
+     * Create property (POST /properties)
      * Only PROPERTY_MANAGER can create a property.
      */
     @PreAuthorize("hasRole('PROPERTY_MANAGER')")
@@ -44,14 +45,12 @@ public class PropertyController {
 
         PropertyResponse created = propertyService.createProperty(request, ownerId);
 
-        // Location: /properties/{id}
         URI location = URI.create("/properties/" + created.getPropertyId());
-
         return ResponseEntity.created(location).body(created);
     }
 
     /**
-     * SMPM-18 View assigned properties (GET /properties)
+     * View assigned properties (GET /properties)
      * PROPERTY_MANAGER + MAINTENANCE_STAFF can view.
      */
     @PreAuthorize("hasAnyRole('PROPERTY_MANAGER','MAINTENANCE_STAFF')")
@@ -62,7 +61,7 @@ public class PropertyController {
     }
 
     /**
-     * SMPM-79 Delete property (DELETE /properties/{id})
+     * Delete property (DELETE /properties/{id})
      * Only PROPERTY_MANAGER can delete.
      */
     @PreAuthorize("hasRole('PROPERTY_MANAGER')")
@@ -70,6 +69,20 @@ public class PropertyController {
     public ResponseEntity<Void> deleteProperty(@PathVariable String id) {
         propertyService.deleteProperty(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Update property (PUT /properties/{id})
+     * Only PROPERTY_MANAGER can update.
+     */
+    @PreAuthorize("hasRole('PROPERTY_MANAGER')")
+    @PutMapping("/{id}")
+    public ResponseEntity<PropertyResponse> updateProperty(
+            @PathVariable UUID id,
+            @Valid @RequestBody PropertyUpdateRequest request
+    ) {
+        PropertyResponse updated = propertyService.updateProperty(id, request);
+        return ResponseEntity.ok(updated);
     }
 
     /**
@@ -87,7 +100,6 @@ public class PropertyController {
             return UUID.fromString("00000000-0000-0000-0000-000000000002");
         }
 
-        // fallback (optional): treat unknown users as staff or throw
         return UUID.fromString("00000000-0000-0000-0000-000000000002");
     }
 }

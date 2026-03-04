@@ -14,59 +14,41 @@ import java.util.UUID;
 public class Property {
 
     @Id
-    @GeneratedValue
-    @Column(columnDefinition = "VARCHAR(36)")
+    @Column(nullable = false, updatable = false, columnDefinition = "VARCHAR(36)")
     private UUID id;
 
     @Column(nullable = false, length = 500)
     private String address;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "property_type", nullable = false, length = 100)
     private String propertyType;
 
-    @Column(nullable = false, name = "manager_id", columnDefinition = "VARCHAR(36)")
+    @Column(name = "manager_id", nullable = false, columnDefinition = "VARCHAR(36)")
     private UUID managerId;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    public UUID getId() {
-        return id;
+    public Property() {}
+
+    @PrePersist
+    void prePersist() {
+        if (id == null) id = UUID.randomUUID();
+        if (createdAt == null) createdAt = LocalDateTime.now();
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public String getAddress() {
-        return address;
-    }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
+    public String getPropertyType() { return propertyType; }
+    public void setPropertyType(String propertyType) { this.propertyType = propertyType; }
 
-    public String getPropertyType() {
-        return propertyType;
-    }
+    public UUID getManagerId() { return managerId; }
+    public void setManagerId(UUID managerId) { this.managerId = managerId; }
 
-    public void setPropertyType(String propertyType) {
-        this.propertyType = propertyType;
-    }
-
-    public UUID getManagerId() {
-        return managerId;
-    }
-
-    public void setManagerId(UUID managerId) {
-        this.managerId = managerId;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

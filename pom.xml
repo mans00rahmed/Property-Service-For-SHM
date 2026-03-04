@@ -59,6 +59,7 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- H2 (for local dev / tests) -->
@@ -93,24 +94,21 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- ========================= -->
-        <!-- TEST DEPENDENCIES (JUnit 5 + MockMvc + Security Test) -->
-        <!-- ========================= -->
-
+        <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <!-- Required for @AutoConfigureMockMvc -->
+        <!-- Optional: @AutoConfigureMockMvc (often included already, but fine) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-test-autoconfigure</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <!-- Required for Security test helpers (with user(), httpBasic(), etc.) -->
+        <!-- Security test helpers -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
