@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 
 public class PropertyUpdateRequest {
 
+//	Update requests
 	@NotBlank(message = "address is required")
 	@Size(max = 500, message = "address must be 500 characters or less")
 	private String address;
