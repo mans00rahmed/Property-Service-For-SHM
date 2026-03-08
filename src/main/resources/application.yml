@@ -24,3 +24,7 @@ spring:
 eureka:
   client:
     enabled: false
+
+app:
+  jwt:
+    secret: "my-super-secure-jwt-secret-key-2026-smart-home-platform"
