@@ -2,12 +2,14 @@ package com.example.property_service.controller;
 
 import com.example.property_service.entity.Property;
 import com.example.property_service.repository.PropertyRepository;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -17,171 +19,220 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class PropertyControllerTest {
 
-	@Autowired
-	MockMvc mockMvc;
+    @Autowired
+    MockMvc mockMvc;
 
-	@Autowired
-	PropertyRepository propertyRepository;
+    @Autowired
+    PropertyRepository propertyRepository;
 
-	private final UUID MANAGER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID MANAGER_ID =
+            UUID.fromString("11111111-1111-1111-1111-111111111111");
 
-	private UUID existingPropertyId;
+    private static final UUID STAFF_ID =
+            UUID.fromString("22222222-2222-2222-2222-222222222222");
 
-	@BeforeEach
-	void setup() {
-		propertyRepository.deleteAll();
+    private UUID existingPropertyId;
 
-		Property p = new Property();
-		p.setAddress("1 Main Street");
-		p.setPropertyType("Apartment");
-		p.setManagerId(MANAGER_ID);
+    @BeforeEach
+    void setup() {
+        propertyRepository.deleteAll();
 
-		existingPropertyId = propertyRepository.save(p).getId();
-	}
+        Property p = new Property();
+        p.setAddress("1 Main Street");
+        p.setPropertyType("Apartment");
+        p.setManagerId(MANAGER_ID);
 
-	// -----------------------
-	// SMPM-18: GET /properties
-	// -----------------------
+        existingPropertyId = propertyRepository.save(p).getId();
+    }
 
-	@Test
-	void getProperties_noAuth_returns401() throws Exception {
-		mockMvc.perform(get("/properties"))
-		.andExpect(status().isUnauthorized());
-	}
+    // -----------------------
+    // SMPM-18: GET /properties
+    // -----------------------
 
-	@Test
-	void getProperties_asManager_returns200() throws Exception {
-		mockMvc.perform(get("/properties")
-				.with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("manager", "password")))
-		.andExpect(status().isOk())
-		.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
-	}
+    @Test
+    void getProperties_noAuth_returns403() throws Exception {
+        mockMvc.perform(get("/properties"))
+                .andExpect(status().isForbidden());
+    }
 
-	@Test
-	void getProperties_asStaff_returns200() throws Exception {
-		mockMvc.perform(get("/properties")
-				.with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("staff", "password")))
-		.andExpect(status().isOk())
-		.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
-	}
+    @Test
+    @WithMockUser(
+            username = "11111111-1111-1111-1111-111111111111",
+            roles = "PROPERTY_MANAGER"
+    )
+    void getProperties_asManager_returns200() throws Exception {
+        mockMvc.perform(get("/properties"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
 
-	// -----------------------
-	// SMPM-16: POST /properties
-	// -----------------------
+    @Test
+    @WithMockUser(
+            username = "22222222-2222-2222-2222-222222222222",
+            roles = "MAINTENANCE_STAFF"
+    )
+    void getProperties_asStaff_returns200() throws Exception {
+        mockMvc.perform(get("/properties"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
 
-	@Test
-	void createProperty_asManager_returns201() throws Exception {
-		String body = """
-				{"address":"2 Main Street","propertyType":"House"}
-				""";
+    // -----------------------
+    // SMPM-16: POST /properties
+    // -----------------------
 
-		mockMvc.perform(post("/properties")
-				.with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("manager", "password"))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(body))
-		.andExpect(status().isCreated())
-		.andExpect(jsonPath("$.address").value("2 Main Street"))
-		.andExpect(jsonPath("$.propertyType").value("House"));
-	}
+    @Test
+    @WithMockUser(
+            username = "11111111-1111-1111-1111-111111111111",
+            roles = "PROPERTY_MANAGER"
+    )
+    void createProperty_asManager_returns201() throws Exception {
+        String body = """
+                {
+                  "address":"2 Main Street",
+                  "propertyType":"House"
+                }
+                """;
 
-	@Test
-	void createProperty_missingAddress_returns400() throws Exception {
-		String body = """
-				{"propertyType":"Apartment"}
-				""";
+        mockMvc.perform(post("/properties")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.address").value("2 Main Street"))
+                .andExpect(jsonPath("$.propertyType").value("House"))
+                .andExpect(jsonPath("$.managerId").value(MANAGER_ID.toString()));
+    }
 
-		mockMvc.perform(post("/properties")
-				.with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("manager", "password"))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(body))
-		.andExpect(status().isBadRequest());
-	}
+    @Test
+    @WithMockUser(
+            username = "11111111-1111-1111-1111-111111111111",
+            roles = "PROPERTY_MANAGER"
+    )
+    void createProperty_missingAddress_returns400() throws Exception {
+        String body = """
+                {
+                  "propertyType":"Apartment"
+                }
+                """;
 
-	// -----------------------
-	// SMPM-79: DELETE /properties/{id}
-	// -----------------------
+        mockMvc.perform(post("/properties")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
 
-	@Test
-	void deleteProperty_asManager_returns204() throws Exception {
-		mockMvc.perform(delete("/properties/" + existingPropertyId)
-				.with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("manager", "password")))
-		.andExpect(status().isNoContent());
-	}
+    // -----------------------
+    // SMPM-79: DELETE /properties/{id}
+    // -----------------------
 
-	@Test
-	void deleteProperty_asStaff_returns403() throws Exception {
-		mockMvc.perform(delete("/properties/" + existingPropertyId)
-				.with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("staff", "password")))
-		.andExpect(status().isForbidden());
-	}
+    @Test
+    @WithMockUser(
+            username = "11111111-1111-1111-1111-111111111111",
+            roles = "PROPERTY_MANAGER"
+    )
+    void deleteProperty_asManager_returns204() throws Exception {
+        mockMvc.perform(delete("/properties/" + existingPropertyId))
+                .andExpect(status().isNoContent());
+    }
 
-	@Test
-	void deleteProperty_nonExisting_returns404() throws Exception {
-		UUID randomId = UUID.randomUUID();
+    @Test
+    @WithMockUser(
+            username = "22222222-2222-2222-2222-222222222222",
+            roles = "MAINTENANCE_STAFF"
+    )
+    void deleteProperty_asStaff_returns403() throws Exception {
+        mockMvc.perform(delete("/properties/" + existingPropertyId))
+                .andExpect(status().isForbidden());
+    }
 
-		mockMvc.perform(delete("/properties/" + randomId)
-				.with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("manager", "password")))
-		.andExpect(status().isNotFound());
-	}
+    @Test
+    @WithMockUser(
+            username = "11111111-1111-1111-1111-111111111111",
+            roles = "PROPERTY_MANAGER"
+    )
+    void deleteProperty_nonExisting_returns404() throws Exception {
+        UUID randomId = UUID.randomUUID();
 
-	// -----------------------
-	// FR-4: PUT /properties/{id}
-	// -----------------------
+        mockMvc.perform(delete("/properties/" + randomId))
+                .andExpect(status().isNotFound());
+    }
 
-	@Test
-	void updateProperty_asManager_returns200_andUpdatesFields() throws Exception {
-		String body = """
-				{"address":"99 New Address","propertyType":"House"}
-				""";
+    // -----------------------
+    // FR-4: PUT /properties/{id}
+    // -----------------------
 
-		mockMvc.perform(put("/properties/" + existingPropertyId)
-				.with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("manager", "password"))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(body))
-		.andExpect(status().isOk())
-		.andExpect(jsonPath("$.propertyId").value(existingPropertyId.toString()))
-		.andExpect(jsonPath("$.address").value("99 New Address"))
-		.andExpect(jsonPath("$.propertyType").value("House"));
+    @Test
+    @WithMockUser(
+            username = "11111111-1111-1111-1111-111111111111",
+            roles = "PROPERTY_MANAGER"
+    )
+    void updateProperty_asManager_returns200_andUpdatesFields() throws Exception {
+        String body = """
+                {
+                  "address":"99 New Address",
+                  "propertyType":"House"
+                }
+                """;
 
-		// testing database persistence (so it's not just returning values)
-		Property updated = propertyRepository.findById(existingPropertyId).orElseThrow();
-		org.junit.jupiter.api.Assertions.assertEquals("99 New Address", updated.getAddress());
-		org.junit.jupiter.api.Assertions.assertEquals("House", updated.getPropertyType());
-	}
+        mockMvc.perform(put("/properties/" + existingPropertyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.propertyId").value(existingPropertyId.toString()))
+                .andExpect(jsonPath("$.address").value("99 New Address"))
+                .andExpect(jsonPath("$.propertyType").value("House"))
+                .andExpect(jsonPath("$.managerId").value(MANAGER_ID.toString()));
 
-	@Test
-	void updateProperty_nonExisting_returns404() throws Exception {
-		UUID randomId = UUID.randomUUID();
+        Property updated = propertyRepository.findById(existingPropertyId).orElseThrow();
+        Assertions.assertEquals("99 New Address", updated.getAddress());
+        Assertions.assertEquals("House", updated.getPropertyType());
+    }
 
-		String body = """
-				{"address":"Doesn't Matter","propertyType":"House"}
-				""";
+    @Test
+    @WithMockUser(
+            username = "11111111-1111-1111-1111-111111111111",
+            roles = "PROPERTY_MANAGER"
+    )
+    void updateProperty_nonExisting_returns404() throws Exception {
+        UUID randomId = UUID.randomUUID();
 
-		mockMvc.perform(put("/properties/" + randomId)
-				.with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("manager", "password"))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(body))
-		.andExpect(status().isNotFound());
-	}
+        String body = """
+                {
+                  "address":"Doesn't Matter",
+                  "propertyType":"House"
+                }
+                """;
 
-	@Test
-	void updateProperty_missingAddress_returns400() throws Exception {
-		String body = """
-				{"propertyType":"House"}
-				""";
+        mockMvc.perform(put("/properties/" + randomId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound());
+    }
 
-		mockMvc.perform(put("/properties/" + existingPropertyId)
-				.with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("manager", "password"))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(body))
-		.andExpect(status().isBadRequest());
-	}
+    @Test
+    @WithMockUser(
+            username = "11111111-1111-1111-1111-111111111111",
+            roles = "PROPERTY_MANAGER"
+    )
+    void updateProperty_missingAddress_returns400() throws Exception {
+        String body = """
+                {
+                  "propertyType":"House"
+                }
+                """;
 
+        mockMvc.perform(put("/properties/" + existingPropertyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
 }
