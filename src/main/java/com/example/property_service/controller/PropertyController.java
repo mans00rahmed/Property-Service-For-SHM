@@ -90,16 +90,10 @@ public class PropertyController {
      * Replace later with real JWT subject -> UUID mapping.
      */
     private UUID resolveUserId(Authentication auth) {
-        String username = auth.getName();
-
-        if ("manager".equals(username)) {
-            return UUID.fromString("00000000-0000-0000-0000-000000000001");
+        try {
+            return UUID.fromString(auth.getName());
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Invalid authenticated user id in JWT subject.");
         }
-
-        if ("staff".equals(username)) {
-            return UUID.fromString("00000000-0000-0000-0000-000000000002");
-        }
-
-        return UUID.fromString("00000000-0000-0000-0000-000000000002");
     }
 }

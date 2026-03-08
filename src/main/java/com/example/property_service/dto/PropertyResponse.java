@@ -7,13 +7,13 @@ public class PropertyResponse {
     private UUID propertyId;
     private String address;
     private String propertyType;
-    private UUID ownerId;
+    private UUID managerId;
 
-    public PropertyResponse(UUID propertyId, String address, String propertyType, UUID ownerId) {
+    public PropertyResponse(UUID propertyId, String address, String propertyType, UUID managerId) {
         this.propertyId = propertyId;
         this.address = address;
         this.propertyType = propertyType;
-        this.ownerId = ownerId;
+        this.managerId = managerId;
     }
 
     public UUID getPropertyId() {
@@ -28,7 +28,7 @@ public class PropertyResponse {
         return propertyType;
     }
 
-    public UUID getOwnerId() {
-        return ownerId;
+    public UUID getManagerId() {
+        return managerId;
     }
 }
