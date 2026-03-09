@@ -70,12 +70,23 @@ public class PropertyService {
     public List<PropertyResponse> getPropertiesForManager(UUID managerId) {
         return propertyRepository.findByManagerId(managerId)
                 .stream()
-                .map(p -> new PropertyResponse(
-                        p.getId(),
-                        p.getAddress(),
-                        p.getPropertyType(),
-                        p.getManagerId()
-                ))
+                .map(this::mapToResponse)
                 .toList();
+    }
+
+    public List<PropertyResponse> getAllProperties() {
+        return propertyRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private PropertyResponse mapToResponse(Property property) {
+        return new PropertyResponse(
+                property.getId(),
+                property.getAddress(),
+                property.getPropertyType(),
+                property.getManagerId()
+        );
     }
 }
