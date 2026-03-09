@@ -25,16 +25,11 @@ public class PropertyController {
         this.propertyService = propertyService;
     }
 
-    // keep your old test endpoint
     @GetMapping("/test")
     public String testPropertyService() {
         return "Property Service is working";
     }
 
-    /**
-     * Create property (POST /properties)
-     * Only PROPERTY_MANAGER can create a property.
-     */
     @PreAuthorize("hasRole('PROPERTY_MANAGER')")
     @PostMapping
     public ResponseEntity<PropertyResponse> createProperty(
@@ -49,21 +44,22 @@ public class PropertyController {
         return ResponseEntity.created(location).body(created);
     }
 
-    /**
-     * View assigned properties (GET /properties)
-     * PROPERTY_MANAGER + MAINTENANCE_STAFF can view.
-     */
     @PreAuthorize("hasAnyRole('PROPERTY_MANAGER','MAINTENANCE_STAFF')")
     @GetMapping
     public ResponseEntity<List<PropertyResponse>> getAssignedProperties(Authentication auth) {
         UUID userId = resolveUserId(auth);
-        return ResponseEntity.ok(propertyService.getPropertiesForManager(userId));
+
+        if (hasRole(auth, "ROLE_PROPERTY_MANAGER")) {
+            return ResponseEntity.ok(propertyService.getPropertiesForManager(userId));
+        }
+
+        if (hasRole(auth, "ROLE_MAINTENANCE_STAFF")) {
+            return ResponseEntity.ok(propertyService.getAllProperties());
+        }
+
+        return ResponseEntity.status(403).build();
     }
 
-    /**
-     * Delete property (DELETE /properties/{id})
-     * Only PROPERTY_MANAGER can delete.
-     */
     @PreAuthorize("hasRole('PROPERTY_MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProperty(@PathVariable String id) {
@@ -71,10 +67,6 @@ public class PropertyController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Update property (PUT /properties/{id})
-     * Only PROPERTY_MANAGER can update.
-     */
     @PreAuthorize("hasRole('PROPERTY_MANAGER')")
     @PutMapping("/{id}")
     public ResponseEntity<PropertyResponse> updateProperty(
@@ -85,15 +77,16 @@ public class PropertyController {
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * Temporary mapping used for local demo/testing.
-     * Replace later with real JWT subject -> UUID mapping.
-     */
     private UUID resolveUserId(Authentication auth) {
         try {
             return UUID.fromString(auth.getName());
         } catch (Exception ex) {
             throw new IllegalArgumentException("Invalid authenticated user id in JWT subject.");
         }
+    }
+
+    private boolean hasRole(Authentication auth, String role) {
+        return auth.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals(role));
     }
 }
