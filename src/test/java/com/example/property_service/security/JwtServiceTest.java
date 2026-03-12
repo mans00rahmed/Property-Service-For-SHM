@@ -13,7 +13,7 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class JwtServiceTest {
+class JwtServiceTest {
 
     private JwtService jwtService;
     private String secret = "mytestsecretmytestsecretmytestsecret"; // must be 32+ chars
