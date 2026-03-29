@@ -21,6 +21,14 @@ public class PropertyService {
     public PropertyService(PropertyRepository propertyRepository) {
         this.propertyRepository = propertyRepository;
     }
+    public void validatePropertyExists(UUID id) {
+        boolean exists = propertyRepository.existsById(id);
+
+        if (!exists) {
+            throw new PropertyNotFoundException(id);
+        }
+    }
+    
 
     public PropertyResponse createProperty(CreatePropertyRequest request, UUID managerId) {
         Property property = new Property();
@@ -89,4 +97,7 @@ public class PropertyService {
                 property.getManagerId()
         );
     }
+
+
+ 
 }

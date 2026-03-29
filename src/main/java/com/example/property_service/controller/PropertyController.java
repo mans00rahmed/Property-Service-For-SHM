@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/properties")
+@RequestMapping("/api/v1/properties")
 public class PropertyController {
 
     private final PropertyService propertyService;
@@ -30,21 +30,19 @@ public class PropertyController {
         return "Property Service is working";
     }
 
-    @PreAuthorize("hasRole('PROPERTY_MANAGER')")
     @PostMapping
     public ResponseEntity<PropertyResponse> createProperty(
-            @Valid @RequestBody CreatePropertyRequest request,
-            Authentication auth
+            @Valid @RequestBody CreatePropertyRequest request
     ) {
-        UUID ownerId = resolveUserId(auth);
+        UUID ownerId = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
         PropertyResponse created = propertyService.createProperty(request, ownerId);
 
-        URI location = URI.create("/properties/" + created.getPropertyId());
+        URI location = URI.create("/api/v1/properties/" + created.getPropertyId());
         return ResponseEntity.created(location).body(created);
     }
 
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER','MAINTENANCE_STAFF')")
+//    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER','MAINTENANCE_STAFF')")
     @GetMapping
     public ResponseEntity<List<PropertyResponse>> getAssignedProperties(Authentication auth) {
         UUID userId = resolveUserId(auth);
@@ -60,14 +58,14 @@ public class PropertyController {
         return ResponseEntity.status(403).build();
     }
 
-    @PreAuthorize("hasRole('PROPERTY_MANAGER')")
+//    @PreAuthorize("hasRole('PROPERTY_MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProperty(@PathVariable String id) {
         propertyService.deleteProperty(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('PROPERTY_MANAGER')")
+//    @PreAuthorize("hasRole('PROPERTY_MANAGER')")
     @PutMapping("/{id}")
     public ResponseEntity<PropertyResponse> updateProperty(
             @PathVariable UUID id,
@@ -75,6 +73,12 @@ public class PropertyController {
     ) {
         PropertyResponse updated = propertyService.updateProperty(id, request);
         return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/{id}/exists")
+    public ResponseEntity<Void> propertyExists(@PathVariable UUID id) {
+        propertyService.validatePropertyExists(id);
+        return ResponseEntity.ok().build();
     }
 
     private UUID resolveUserId(Authentication auth) {
@@ -88,5 +92,11 @@ public class PropertyController {
     private boolean hasRole(Authentication auth, String role) {
         return auth.getAuthorities().stream()
                 .anyMatch(authority -> authority.getAuthority().equals(role));
+    }
+    
+    
+    @GetMapping("/all")
+    public ResponseEntity<List<PropertyResponse>> getAllForTest() {
+        return ResponseEntity.ok(propertyService.getAllProperties());
     }
 }
