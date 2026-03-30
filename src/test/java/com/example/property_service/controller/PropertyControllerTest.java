@@ -60,7 +60,7 @@ class PropertyControllerTest {
 
     @Test
     void getProperties_noAuth_returns403() throws Exception {
-        mockMvc.perform(get("/properties"))
+        mockMvc.perform(get("/api/v1/properties"))
                 .andExpect(status().isForbidden());
     }
 
@@ -70,7 +70,7 @@ class PropertyControllerTest {
             roles = "PROPERTY_MANAGER"
     )
     void getProperties_asManager_returns200() throws Exception {
-        mockMvc.perform(get("/properties"))
+        mockMvc.perform(get("/api/v1/properties"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
@@ -81,7 +81,7 @@ class PropertyControllerTest {
             roles = "MAINTENANCE_STAFF"
     )
     void getProperties_asStaff_returns200() throws Exception {
-        mockMvc.perform(get("/properties"))
+        mockMvc.perform(get("/api/v1/properties"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
@@ -103,7 +103,7 @@ class PropertyControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/properties")
+        mockMvc.perform(post("/api/v1/properties")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -124,7 +124,7 @@ class PropertyControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/properties")
+        mockMvc.perform(post("/api/v1/properties")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest());
@@ -140,7 +140,7 @@ class PropertyControllerTest {
             roles = "PROPERTY_MANAGER"
     )
     void deleteProperty_asManager_returns204() throws Exception {
-        mockMvc.perform(delete("/properties/" + existingPropertyId))
+        mockMvc.perform(delete("/api/v1/properties/" + existingPropertyId))
                 .andExpect(status().isNoContent());
     }
 
@@ -150,7 +150,7 @@ class PropertyControllerTest {
             roles = "MAINTENANCE_STAFF"
     )
     void deleteProperty_asStaff_returns403() throws Exception {
-        mockMvc.perform(delete("/properties/" + existingPropertyId))
+        mockMvc.perform(delete("/api/v1/properties/" + existingPropertyId))
                 .andExpect(status().isForbidden());
     }
 
@@ -162,7 +162,7 @@ class PropertyControllerTest {
     void deleteProperty_nonExisting_returns404() throws Exception {
         UUID randomId = UUID.randomUUID();
 
-        mockMvc.perform(delete("/properties/" + randomId))
+        mockMvc.perform(delete("/api/v1/properties/" + randomId))
                 .andExpect(status().isNotFound());
     }
 
@@ -183,7 +183,7 @@ class PropertyControllerTest {
                 }
                 """;
 
-        mockMvc.perform(put("/properties/" + existingPropertyId)
+        mockMvc.perform(put("/api/v1/properties/" + existingPropertyId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -212,7 +212,7 @@ class PropertyControllerTest {
                 }
                 """;
 
-        mockMvc.perform(put("/properties/" + randomId)
+        mockMvc.perform(put("/api/v1/properties/" + randomId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isNotFound());
@@ -230,7 +230,7 @@ class PropertyControllerTest {
                 }
                 """;
 
-        mockMvc.perform(put("/properties/" + existingPropertyId)
+        mockMvc.perform(put("/api/v1/properties/" + existingPropertyId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest());
