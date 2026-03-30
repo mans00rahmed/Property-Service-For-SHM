@@ -32,9 +32,10 @@ public class PropertyController {
 
     @PostMapping
     public ResponseEntity<PropertyResponse> createProperty(
-            @Valid @RequestBody CreatePropertyRequest request
+            @Valid @RequestBody CreatePropertyRequest request,
+            Authentication auth
     ) {
-        UUID ownerId = UUID.fromString("22222222-2222-2222-2222-222222222222");
+        UUID ownerId = UUID.fromString(auth.getName());
 
         PropertyResponse created = propertyService.createProperty(request, ownerId);
 
@@ -58,7 +59,7 @@ public class PropertyController {
         return ResponseEntity.status(403).build();
     }
 
-//    @PreAuthorize("hasRole('PROPERTY_MANAGER')")
+    @PreAuthorize("hasRole('PROPERTY_MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProperty(@PathVariable String id) {
         propertyService.deleteProperty(id);
