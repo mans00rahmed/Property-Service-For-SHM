@@ -30,11 +30,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/properties/**").hasAnyRole(
+                        .requestMatchers(HttpMethod.GET, "/api/v1/properties/*/exists").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/properties/**").hasAnyRole(
                                 "PROPERTY_MANAGER", "MAINTENANCE_STAFF")
-                        .requestMatchers(HttpMethod.POST, "/properties/**").hasRole("PROPERTY_MANAGER")
-                        .requestMatchers(HttpMethod.PUT, "/properties/**").hasRole("PROPERTY_MANAGER")
-                        .requestMatchers(HttpMethod.DELETE, "/properties/**").hasRole("PROPERTY_MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/properties/**").hasRole("PROPERTY_MANAGER")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/properties/**").hasRole("PROPERTY_MANAGER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/properties/**").hasRole("PROPERTY_MANAGER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
