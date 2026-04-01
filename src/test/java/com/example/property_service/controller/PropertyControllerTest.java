@@ -59,9 +59,9 @@ class PropertyControllerTest {
     // -----------------------
 
     @Test
-    void getProperties_noAuth_returns403() throws Exception {
+    void getProperties_noAuth_returns401() throws Exception {
         mockMvc.perform(get("/api/v1/properties"))
-                .andExpect(status().isForbidden());
+        	.andExpect(status().isUnauthorized());
     }
 
     @Test
