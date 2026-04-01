@@ -29,6 +29,11 @@ public class PropertyController {
     public String testPropertyService() {
         return "Property Service is working";
     }
+    
+    @GetMapping("/manager/{managerId}")
+    public ResponseEntity<List<UUID>> getPropertyIdsByManager(@PathVariable UUID managerId) {
+        return ResponseEntity.ok(propertyService.getPropertyIdsByManager(managerId));
+    }
 
     @PostMapping
     public ResponseEntity<PropertyResponse> createProperty(
