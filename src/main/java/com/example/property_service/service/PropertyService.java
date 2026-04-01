@@ -98,6 +98,9 @@ public class PropertyService {
         );
     }
 
+    public List<UUID> getPropertyIdsByManager(UUID managerId) {
+        return propertyRepository.findPropertyIdsByManagerId(managerId);
+    }
 
  
 }

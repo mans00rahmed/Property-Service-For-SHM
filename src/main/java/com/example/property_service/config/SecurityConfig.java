@@ -1,6 +1,7 @@
 package com.example.property_service.config;
 
 import com.example.property_service.security.JwtAuthFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -27,15 +28,50 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("""
+                                {
+                                  "status": 401,
+                                  "error": "Unauthorized",
+                                  "message": "Authentication required"
+                                }
+                                """);
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+                            response.getWriter().write("""
+                                {
+                                  "status": 403,
+                                  "error": "Forbidden",
+                                  "message": "Access Denied"
+                                }
+                                """);
+                        })
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/properties/*/exists").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/properties/**").hasAnyRole(
-                                "PROPERTY_MANAGER", "MAINTENANCE_STAFF")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/properties/**").hasRole("PROPERTY_MANAGER")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/properties/**").hasRole("PROPERTY_MANAGER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/properties/**").hasRole("PROPERTY_MANAGER")
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/properties/manager/**")
+                        .hasRole("PROPERTY_MANAGER")
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/properties/**")
+                        .hasAnyRole("PROPERTY_MANAGER", "MAINTENANCE_STAFF")
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/properties/**")
+                        .hasRole("PROPERTY_MANAGER")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/properties/**")
+                        .hasRole("PROPERTY_MANAGER")
+
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/properties/**")
+                        .hasRole("PROPERTY_MANAGER")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
