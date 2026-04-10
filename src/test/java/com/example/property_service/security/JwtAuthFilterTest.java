@@ -12,20 +12,18 @@ import static org.mockito.Mockito.*;
 
 class JwtAuthFilterTest {
 
-    private JwtService jwtService;
-    private JwtAuthFilter jwtAuthFilter;
     private FilterChain filterChain;
 
     @BeforeEach
     void setup() {
-        jwtService = mock(JwtService.class);
-        jwtAuthFilter = new JwtAuthFilter(jwtService);
         filterChain = mock(FilterChain.class);
         SecurityContextHolder.clearContext();
     }
 
     @Test
     void testNoAuthorizationHeader() throws Exception {
+        JwtService jwtService = new JwtService();
+        JwtAuthFilter jwtAuthFilter = new JwtAuthFilter(jwtService);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -37,17 +35,23 @@ class JwtAuthFilterTest {
 
     @Test
     void testValidJwtAuthentication() throws Exception {
+        Claims claims = io.jsonwebtoken.Jwts.claims();
+        claims.setSubject("user1");
+        claims.put("role", "ADMIN");
+
+        JwtService jwtService = new JwtService() {
+            @Override
+            public Claims parseClaims(String token) {
+                return claims;
+            }
+        };
+
+        JwtAuthFilter jwtAuthFilter = new JwtAuthFilter(jwtService);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer validtoken");
 
         MockHttpServletResponse response = new MockHttpServletResponse();
-
-        Claims claims = mock(Claims.class);
-        when(claims.getSubject()).thenReturn("user1");
-        when(claims.get("role", String.class)).thenReturn("ADMIN");
-
-        when(jwtService.parseClaims("validtoken")).thenReturn(claims);
 
         jwtAuthFilter.doFilterInternal(request, response, filterChain);
 
@@ -56,14 +60,19 @@ class JwtAuthFilterTest {
 
     @Test
     void testInvalidTokenClearsContext() throws Exception {
+        JwtService jwtService = new JwtService() {
+            @Override
+            public Claims parseClaims(String token) {
+                throw new RuntimeException("Invalid token");
+            }
+        };
+
+        JwtAuthFilter jwtAuthFilter = new JwtAuthFilter(jwtService);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer badtoken");
 
         MockHttpServletResponse response = new MockHttpServletResponse();
-
-        when(jwtService.parseClaims("badtoken"))
-                .thenThrow(new RuntimeException("Invalid token"));
 
         jwtAuthFilter.doFilterInternal(request, response, filterChain);
 

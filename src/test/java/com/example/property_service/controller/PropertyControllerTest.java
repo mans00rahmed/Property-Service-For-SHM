@@ -235,4 +235,18 @@ class PropertyControllerTest {
                         .content(body))
                 .andExpect(status().isBadRequest());
     }
+    
+    @Test
+    void propertyExists_existingId_returns200() throws Exception {
+        mockMvc.perform(get("/api/v1/properties/" + existingPropertyId + "/exists"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void propertyExists_nonExistingId_returns404() throws Exception {
+        UUID randomId = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/v1/properties/" + randomId + "/exists"))
+                .andExpect(status().isNotFound());
+    }
 }
