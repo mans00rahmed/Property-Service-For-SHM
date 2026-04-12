@@ -55,11 +55,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+
+                        // 🔥 INTERNAL SERVICE CALLS (MUST BE FIRST)
                         .requestMatchers(HttpMethod.GET, "/api/v1/properties/*/exists").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/properties/manager/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/properties/manager/**")
-                        .hasRole("PROPERTY_MANAGER")
-
+                        // 🔒 USER ACCESS RULES
                         .requestMatchers(HttpMethod.GET, "/api/v1/properties/**")
                         .hasAnyRole("PROPERTY_MANAGER", "MAINTENANCE_STAFF")
 
